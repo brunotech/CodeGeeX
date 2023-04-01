@@ -77,63 +77,53 @@ def distribute(distribution, budget):
     return dis
 
 
-names = []
-for i in range(39):
-    names.append(str((i + 2) * 5) + " uniform")
-for i in range(39):
-    names.append(str((i + 2) * 5) + " weighted")
-for i in range(39):
-    names.append(str((i + 2) * 5) + " best")
-for i in range(39):
-    names.append(str((i + 2) * 5) + " max")
-
-out = open("solution_output.txt", 'w')
-for model in models:
-    if 'codegeex' in model:
-        dist = [33, 6, 20, 32, 9]
-    if 'codegen' in model:
-        dist = [38, 8, 29, 17, 8]
-    if 'incoder' in model:
-        dist = [12, 4, 5, 45, 34]
-    avi_list = {}
-    for pp in w:
-        if (np.sum(w[pp]) > 1500):
-            if model in pp:
+names = [f"{str((i + 2) * 5)} uniform" for i in range(39)]
+names.extend(f"{str((i + 2) * 5)} weighted" for i in range(39))
+names.extend(f"{str((i + 2) * 5)} best" for i in range(39))
+names.extend(f"{str((i + 2) * 5)} max" for i in range(39))
+with open("solution_output.txt", 'w') as out:
+    for model in models:
+        if 'codegeex' in model:
+            dist = [33, 6, 20, 32, 9]
+        if 'codegen' in model:
+            dist = [38, 8, 29, 17, 8]
+        if 'incoder' in model:
+            dist = [12, 4, 5, 45, 34]
+        avi_list = {}
+        for pp in w:
+            if (np.sum(w[pp]) > 1500) and model in pp:
                 for l in languages:
                     if l in pp.replace('javascript', 'js'):
                         if l in avi_list:
                             avi_list[l].append(pp)
                         else:
                             avi_list[l] = [pp]
-    # print(avi_list)
-    maxsums = np.zeros(len(names))
-    maxsumscomb = np.zeros((len(names), 5))
-    current_marker = [0, 0, 0, 0, 0]
-    while current_marker[0] < len(avi_list[languages[0]]):
-        aclist = []
-        for i in range(5):
-            aclist.append(w[avi_list[languages[i]][current_marker[i]]])
-        sums, sumdists, sumop, summax = compute(aclist, dist)
-        things = np.concatenate((sums, sumdists, sumop, summax))
+        # print(avi_list)
+        maxsums = np.zeros(len(names))
+        maxsumscomb = np.zeros((len(names), 5))
+        current_marker = [0, 0, 0, 0, 0]
+        while current_marker[0] < len(avi_list[languages[0]]):
+            aclist = [w[avi_list[languages[i]][current_marker[i]]] for i in range(5)]
+            sums, sumdists, sumop, summax = compute(aclist, dist)
+            things = np.concatenate((sums, sumdists, sumop, summax))
+            for i in range(len(names)):
+                if (things[i] > maxsums[i]):
+                    # print(names[i],things[i],current_marker)
+                    maxsums[i] = things[i]
+                    maxsumscomb[i] = current_marker
+
+            current_marker[-1] += 1
+            p = 4
+            while (current_marker[p] >= len(avi_list[languages[p]]) and p > 0):
+                current_marker[p] = 0
+                current_marker[p - 1] += 1
+                p -= 1
+
+        print(model)
+        print(model, file=out)
         for i in range(len(names)):
-            if (things[i] > maxsums[i]):
-                # print(names[i],things[i],current_marker)
-                maxsums[i] = things[i]
-                maxsumscomb[i] = current_marker
-
-        current_marker[-1] += 1
-        p = 4
-        while (current_marker[p] >= len(avi_list[languages[p]]) and p > 0):
-            current_marker[p] = 0
-            current_marker[p - 1] += 1
-            p -= 1
-
-    print(model)
-    print(model, file=out)
-    for i in range(len(names)):
-        print(names[i], maxsums[i], maxsumscomb[i])
-        print(names[i], maxsums[i], file=out)
-    # use the best of mix100 for further purposes
-    for i in range(5):
-        print(languages[i], avi_list[languages[i]][int(maxsumscomb[2, i])])
-out.close()
+            print(names[i], maxsums[i], maxsumscomb[i])
+            print(names[i], maxsums[i], file=out)
+        # use the best of mix100 for further purposes
+        for i in range(5):
+            print(languages[i], avi_list[languages[i]][int(maxsumscomb[2, i])])

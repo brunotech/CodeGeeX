@@ -15,13 +15,13 @@ assignment = [33, 6, 20, 32, 9]
 assignment = [38, 8, 29, 17, 8]
 assignment = [12, 4, 5, 45, 34]
 for folder in all_reps:
-    if not ("." in folder):
-        q = os.listdir(repo + '/' + folder)
+    if "." not in folder:
+        q = os.listdir(f'{repo}/{folder}')
         for f in q:
-            if 'result' in f and not ('example' in f):
+            if 'result' in f and 'example' not in f:
                 passed = np.zeros(164)
                 all_p = 0
-                fi = open(repo + '/' + folder + '/' + f, 'r')
+                fi = open(f'{repo}/{folder}/{f}', 'r')
                 t = fi.readlines()
                 for l in t:
                     if len(l.strip()) == 0:
